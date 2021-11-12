@@ -25,14 +25,25 @@ class PhpRedisLock extends LockAbstract
      */
     protected $client;
 
+	/**
+	 * Default expiration time
+	 * @var int
+	 */
+	protected $expiration = 0;
+
     /**
      * @param $client Redis
+	 * @param int $expiration Default expiration time for lock
      */
-    public function __construct($client)
+    public function __construct($client, $expiration = FALSE)
     {
         parent::__construct();
 
         $this->client = $client;
+
+		if ($expiration) {
+			$this->expiration = (int)$expiration;
+		}
     }
 
     /**
@@ -46,8 +57,30 @@ class PhpRedisLock extends LockAbstract
             return false;
         }
 
+		if ($this->expiration) {
+			$this->client->expire($name, time() + $this->expiration);
+		}
+
         return true;
     }
+
+	/**
+	 * @return int
+	 */
+	public function getExpiration() {
+		return $this->expiration;
+	}
+
+	/**
+	 * @param int $expiration
+	 *
+	 * @return PredisRedisLock
+	 */
+	public function setExpiration( $expiration ) {
+		$this->expiration = $expiration;
+
+		return $this;
+	}
 
     /**
      * Release lock

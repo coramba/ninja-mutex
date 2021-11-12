@@ -25,15 +25,44 @@ class PredisRedisLock extends LockAbstract
      */
     protected $client;
 
+	/**
+	 * Default expiration time
+	 * @var int
+	 */
+	protected $expiration = 0;
+
     /**
      * @param $client Predis\Client
+	 * @param int $expiration Default expiration time for lock
      */
-    public function __construct($client)
+    public function __construct($client, $expiration = FALSE)
     {
         parent::__construct();
 
         $this->client = $client;
+
+		if ($expiration) {
+			$this->expiration = (int)$expiration;
+		}
     }
+
+	/**
+	 * @return int
+	 */
+	public function getExpiration() {
+		return $this->expiration;
+	}
+
+	/**
+	 * @param int $expiration
+	 *
+	 * @return PredisRedisLock
+	 */
+	public function setExpiration( $expiration ) {
+		$this->expiration = $expiration;
+
+		return $this;
+	}
 
     /**
      * @param  string $name
@@ -45,6 +74,10 @@ class PredisRedisLock extends LockAbstract
         if (!$this->client->setnx($name, serialize($this->getLockInformation()))) {
             return false;
         }
+
+		if ($this->expiration) {
+			$this->client->expire($name, time() + $this->expiration);
+		}
 
         return true;
     }
