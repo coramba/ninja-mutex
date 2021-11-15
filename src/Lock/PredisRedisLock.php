@@ -76,7 +76,7 @@ class PredisRedisLock extends LockAbstract
         }
 
 		if ($this->expiration) {
-			$this->client->expire($name, time() + $this->expiration);
+			$this->client->expire($name, $this->expiration);
 		}
 
         return true;
